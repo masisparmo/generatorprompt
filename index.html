@@ -250,8 +250,15 @@
                 setIsGeneratingImage(true);
                 setPreviewImageUrl('');
                 try {
-                    const payload = { instances: [{ prompt: generatedPromptEn }], parameters: { sampleCount: 1 } };
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`, {
+                    const payload = {
+                        contents: [{
+                            parts: [{ text: generatedPromptEn }]
+                        }],
+                        generationConfig: {
+                            responseModalities: ['TEXT', 'IMAGE']
+                        },
+                    };
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -263,16 +270,12 @@
                     }
 
                     const result = await response.json();
-                    console.log("Image API Response:", result); // For debugging
+                    const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
 
-                    if (result.predictions && result.predictions[0] && result.predictions[0].bytesBase64Encoded) {
-                        setPreviewImageUrl(`data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`);
+                    if (base64Data) {
+                        setPreviewImageUrl(`data:image/png;base64,${base64Data}`);
                     } else {
-                        // Check for safety filter rejection
-                        if (result.predictions && result.predictions[0] && result.predictions[0].safetyRatings) {
-                             throw new Error('Gambar tidak dapat dibuat karena terdeteksi oleh filter keamanan. Coba ubah prompt Anda.');
-                        }
-                        throw new Error('No image data in API response. Pastikan API Key Anda memiliki akses ke Vertex AI API (Imagen).');
+                        throw new Error('No image data in API response. Coba ubah prompt Anda atau periksa konfigurasi API Key.');
                     }
                 } catch (error) {
                     alert(`Gagal membuat pratinjau gambar. \n\nDetail: ${error.message}`);
@@ -511,7 +514,7 @@
                                         <li>Login dengan akun Google Anda.</li>
                                         <li>Klik tombol **"Get API key"** di menu sebelah kiri.</li>
                                         <li>Klik **"Create API key in new project"**.</li>
-                                        <li>Salin (Copy) API Key yang muncul. Pastikan API ini diaktifkan untuk "Generative Language API" dan "Vertex AI API" (untuk Imagen).</li>
+                                        <li>Salin (Copy) API Key yang muncul. Pastikan proyek Google Cloud Anda memiliki **informasi penagihan (billing)** yang aktif untuk menggunakan Imagen API.</li>
                                     </ol>
                                 </div>
                                 <button onClick={() => setIsHelpModalOpen(false)} className="mt-6 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors">Mengerti</button>

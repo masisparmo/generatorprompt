@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator Detail Prompt Promosi AI</title>
+    <title>Prompt Generator Image dan Video</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -50,8 +50,9 @@
         // --- Main Application Component ---
         const App = () => {
             // --- State Management ---
+            const [mainCategory, setMainCategory] = useState('promosi');
             const [apiKey, setApiKey] = useState('');
-            const [outputType, setOutputType] = useState('flyer');
+            const [outputType, setOutputType] = useState('image');
             const [activeTab, setActiveTab] = useState('id');
             const [history, setHistory] = useState([]);
             const [view, setView] = useState('form');
@@ -70,36 +71,32 @@
 
             // Form Inputs
             const [inputs, setInputs] = useState({
-                productName: '',
-                targetAudience: 'Profesional Muda (25-35 tahun)',
-                keyMessage: '',
-                promoType: 'Diskon Spesial',
-                ctaText: 'Beli Sekarang!',
-                toneOfVoice: 'Profesional',
-                customToneOfVoice: '',
-                visualStyle: 'Modern & Minimalis',
-                customVisualStyle: '',
+                // Shared
+                toneOfVoice: 'Profesional', customToneOfVoice: '',
+                visualStyle: 'Modern & Minimalis', customVisualStyle: '',
                 aspectRatio: '4:5',
-                videoDuration: '15 detik',
-                musicMood: 'Ceria dan bersemangat',
-                characterName: 'Bara',
-                characterDesc: 'Seorang barista muda yang ramah',
-                characterDialog: 'Pagi jadi lebih semangat dengan kopi spesial dari kami!'
+                // Promosi
+                productName: '', targetAudience: 'Profesional Muda (25-35 tahun)', keyMessage: '', promoType: 'Diskon Spesial', ctaText: 'Beli Sekarang!',
+                // Ucapan
+                greetingType: 'Ulang Tahun', customGreetingType: '', recipientName: 'Sahabatku', greetingMessage: 'Semoga panjang umur dan sehat selalu!',
+                // Konten Sosmed
+                socialTopic: 'Tips fotografi mobile', socialPlatform: 'Instagram Post', socialGoal: 'Edukasi',
+                // Packaging
+                packagingProduct: 'Keripik Kentang', packagingType: 'Pouch', materialTexture: 'Plastik Matte', requiredInfo: 'Logo, Nama Brand, Varian Rasa, Netto', graphicElements: 'Ilustrasi kentang dan cabai',
+                // Food Photography
+                foodName: 'Nasi Goreng Seafood', platingStyle: 'Minimalis di piring putih', foodElements: 'Taburan daun bawang dan kerupuk', foodLighting: 'Cahaya sore dari jendela', foodBackground: 'Meja marmer putih',
+                // Real Estate
+                buildingType: 'Vila mewah modern', architectureStyle: 'Japandi', timeAndWeather: 'Pagi hari yang cerah', cameraAngle: 'Eye-level dari depan', mainFeature: 'Kolam renang infinity pool',
+                // Character
+                characterSubject: 'Robot asisten yang ramah', artStyle: 'Gaya kartun Disney 3D', poseAndExpression: 'Tersenyum dan melambai', clothingAndAccessories: 'Mengenakan celemek dan dasi kupu-kupu', characterBackground: 'Polos dengan warna gradien',
+                // Video
+                videoDuration: '15 detik', musicMood: 'Ceria dan bersemangat', characterName: 'Bara', characterDesc: 'Seorang barista muda yang ramah', characterDialog: 'Pagi jadi lebih semangat!'
             });
             
-            // --- Data & Templates ---
-            const promptTemplates = {
-                "Peluncuran Produk": { productName: 'Sepatu Lari "Velocity X"', keyMessage: 'Teknologi terbaru untuk kecepatan maksimal', promoType: 'Produk Baru', ctaText: 'Pesan Sekarang!', toneOfVoice: 'Inspiratif', visualStyle: 'Dinamis & Teknologi' },
-                "Flash Sale": { productName: 'Semua Kemeja Katun', keyMessage: 'Hanya 3 jam!', promoType: 'Flash Sale', ctaText: 'Belanja Sekarang, Sebelum Kehabisan!', toneOfVoice: 'Mendesak (Urgent)', visualStyle: 'Ceria & Penuh Warna' },
-                "Pengumuman Acra": { productName: 'Workshop Digital Marketing', keyMessage: 'Belajar dari para ahli', promoType: 'Workshop', ctaText: 'Daftar Sekarang, Tempat Terbatas!', toneOfVoice: 'Profesional', visualStyle: 'Modern & Minimalis' }
-            };
-
             // --- Effects ---
             useEffect(() => {
                 const savedHistory = localStorage.getItem('promptHistory');
-                if (savedHistory) {
-                    setHistory(JSON.parse(savedHistory));
-                }
+                if (savedHistory) setHistory(JSON.parse(savedHistory));
             }, []);
 
             // --- Handlers ---
@@ -107,15 +104,8 @@
                 const { name, value } = e.target;
                 setInputs(prev => ({ ...prev, [name]: value }));
             };
-            
-            const handleTemplateSelect = (e) => {
-                const templateKey = e.target.value;
-                if (promptTemplates[templateKey]) {
-                    setInputs(prev => ({ ...prev, ...promptTemplates[templateKey] }));
-                }
-            };
 
-            // --- Clipboard & History ---
+            // --- File & History ---
             const copyToClipboard = (text) => {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
@@ -134,8 +124,20 @@
                 setTimeout(() => setCopySuccess(''), 2000);
             };
 
+            const saveToFile = (text) => {
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `prompt-${Date.now()}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
             const saveToHistory = (idPrompt, enPrompt) => {
-                const newHistoryItem = { id: Date.now(), inputs: { ...inputs }, promptId: idPrompt, promptEn: enPrompt, isFavorite: false, outputType: outputType };
+                const newHistoryItem = { id: Date.now(), inputs: { ...inputs }, promptId: idPrompt, promptEn: enPrompt, isFavorite: false, outputType: outputType, mainCategory: mainCategory };
                 const updatedHistory = [newHistoryItem, ...history];
                 setHistory(updatedHistory);
                 localStorage.setItem('promptHistory', JSON.stringify(updatedHistory));
@@ -146,6 +148,7 @@
                 setGeneratedPromptId(item.promptId);
                 setGeneratedPromptEn(item.promptEn);
                 setOutputType(item.outputType);
+                setMainCategory(item.mainCategory);
                 setPreviewImageUrl('');
                 setView('form');
             };
@@ -169,42 +172,51 @@
                 return data.candidates[0].content.parts[0].text;
             };
 
-            const handleImageAnalysis = (e) => {
-                const file = e.target.files[0];
-                if (!file || !apiKey) {
-                    if(!apiKey) alert('Masukkan API Key untuk menggunakan fitur ini.');
-                    return;
+            const buildBasePrompt = () => {
+                const finalToneOfVoice = inputs.toneOfVoice === 'Lainnya...' ? inputs.customToneOfVoice : inputs.toneOfVoice;
+                const finalVisualStyle = inputs.visualStyle === 'Lainnya...' ? inputs.customVisualStyle : inputs.visualStyle;
+                const finalGreetingType = inputs.greetingType === 'Lainnya...' ? inputs.customGreetingType : inputs.greetingType;
+                
+                let details = `
+                    - Nada Suara: ${finalToneOfVoice}
+                    - Gaya Visual: ${finalVisualStyle}`;
+
+                if (outputType === 'image') {
+                    details += `\n- Aspek Rasio: ${inputs.aspectRatio}`;
+                } else {
+                    details += `
+                    - Durasi: ${inputs.videoDuration}
+                    - Suasana/Musik: ${inputs.musicMood}
+                    - Karakter: ${inputs.characterName} (${inputs.characterDesc})
+                    - Dialog: "${inputs.characterDialog}"`;
                 }
-                setIsAnalyzing(true);
-                const reader = new FileReader();
-                reader.onloadend = async () => {
-                    const base64Data = reader.result.split(',')[1];
-                    const request = {
-                        contents: [{
-                            parts: [
-                                { text: "Analisis gambar produk ini. Deskripsikan produknya secara singkat untuk kolom 'Nama Produk' dan sarankan 'Gaya Visual' yang cocok berdasarkan estetika gambar. Jawab dalam format JSON: {\"productName\": \"...\", \"visualStyle\": \"...\"}" },
-                                { inlineData: { mimeType: file.type, data: base64Data } }
-                            ]
-                        }]
-                    };
-                    try {
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(request)
-                        });
-                        const data = await response.json();
-                        const resultText = data.candidates[0].content.parts[0].text;
-                        const resultJson = JSON.parse(resultText.replace(/```json|```/g, ''));
-                        setInputs(prev => ({ ...prev, productName: resultJson.productName, visualStyle: resultJson.visualStyle }));
-                    } catch (error) {
-                        alert('Gagal menganalisis gambar. Pastikan API Key Anda valid dan mendukung Gemini.');
-                        console.error(error);
-                    } finally {
-                        setIsAnalyzing(false);
-                    }
-                };
-                reader.readAsDataURL(file);
+
+                switch (mainCategory) {
+                    case 'promosi':
+                        details += `\n- Kategori: Promosi Produk\n- Produk: ${inputs.productName}\n- Target: ${inputs.targetAudience}\n- Pesan: ${inputs.keyMessage}\n- CTA: ${inputs.ctaText}\n- Promo: ${inputs.promoType}`;
+                        break;
+                    case 'ucapan':
+                        details += `\n- Kategori: Kartu Ucapan\n- Jenis Ucapan: ${finalGreetingType}\n- Untuk: ${inputs.recipientName}\n- Pesan: ${inputs.greetingMessage}`;
+                        break;
+                    case 'sosmed':
+                        details += `\n- Kategori: Konten Sosial Media\n- Topik: ${inputs.socialTopic}\n- Platform: ${inputs.socialPlatform}\n- Tujuan: ${inputs.socialGoal}`;
+                        break;
+                    case 'packaging':
+                        details += `\n- Kategori: Desain Packaging\n- Produk: ${inputs.packagingProduct}\n- Jenis Packaging: ${inputs.packagingType}\n- Material & Tekstur: ${inputs.materialTexture}\n- Info Wajib: ${inputs.requiredInfo}\n- Unsur Grafis: ${inputs.graphicElements}`;
+                        break;
+                    case 'makanan':
+                        details += `\n- Kategori: Fotografi Makanan\n- Nama Makanan: ${inputs.foodName}\n- Gaya Plating: ${inputs.platingStyle}\n- Elemen Tambahan: ${inputs.foodElements}\n- Pencahayaan: ${inputs.foodLighting}\n- Latar Belakang: ${inputs.foodBackground}`;
+                        break;
+                    case 'properti':
+                        details += `\n- Kategori: Properti & Arsitektur\n- Tipe Bangunan: ${inputs.buildingType}\n- Gaya Arsitektur: ${inputs.architectureStyle}\n- Waktu & Cuaca: ${inputs.timeAndWeather}\n- Sudut Kamera: ${inputs.cameraAngle}\n- Fitur Utama: ${inputs.mainFeature}`;
+                        break;
+                    case 'karakter':
+                        details += `\n- Kategori: Desain Karakter\n- Subjek: ${inputs.characterSubject}\n- Gaya Seni: ${inputs.artStyle}\n- Pose & Ekspresi: ${inputs.poseAndExpression}\n- Pakaian & Aksesori: ${inputs.clothingAndAccessories}\n- Latar Belakang: ${inputs.characterBackground}`;
+                        break;
+                }
+                
+                const promptType = outputType === 'image' ? 'AI Image Generator (Midjourney/DALL-E)' : 'AI Video Generator (Google Veo)';
+                return `Buatkan prompt detail untuk ${promptType} berdasarkan:\n${details}\nStruktur prompt harus profesional. Untuk gambar, sertakan komposisi dan pencahayaan. Untuk video, buat seperti skenario film. Tulis "aspek rasio" secara lengkap.`;
             };
 
             const generatePrompt = async () => {
@@ -213,47 +225,15 @@
                     return;
                 }
                 setIsLoading(true);
-                setGeneratedPromptId('');
-                setGeneratedPromptEn('');
-                setPreviewImageUrl('');
-                setActiveTab('id');
+                setGeneratedPromptId(''); setGeneratedPromptEn(''); setPreviewImageUrl(''); setActiveTab('id');
 
-                const finalToneOfVoice = inputs.toneOfVoice === 'Lainnya...' ? inputs.customToneOfVoice : inputs.toneOfVoice;
-                const finalVisualStyle = inputs.visualStyle === 'Lainnya...' ? inputs.customVisualStyle : inputs.visualStyle;
-                
-                const { productName, targetAudience, keyMessage, promoType, ctaText, aspectRatio, videoDuration, musicMood, characterName, characterDesc, characterDialog } = inputs;
-                const basePrompt = outputType === 'flyer' ?
-                    `Buatkan prompt detail untuk AI Image Generator (Midjourney/DALL-E) berdasarkan:
-                    - Produk: ${productName}
-                    - Target: ${targetAudience}
-                    - Pesan: ${keyMessage}
-                    - CTA: ${ctaText}
-                    - Promo: ${promoType}
-                    - Nada Suara: ${finalToneOfVoice}
-                    - Gaya Visual: ${finalVisualStyle}
-                    - Aspek Rasio: ${aspectRatio}
-                    Struktur prompt harus profesional, mencakup komposisi, pencahayaan, dan parameter teknis. Tulis "aspek rasio" secara lengkap.`
-                    :
-                    `Buatkan prompt komprehensif untuk AI Video Generator (Google Veo) berdasarkan:
-                    - Produk: ${productName}
-                    - Target: ${targetAudience}
-                    - Pesan: ${keyMessage}
-                    - CTA: ${ctaText}
-                    - Durasi: ${videoDuration}
-                    - Gaya Visual: ${finalVisualStyle}
-                    - Suasana: ${musicMood}
-                    - Nada Suara: ${finalToneOfVoice}
-                    - Karakter: ${characterName} (${characterDesc})
-                    - Dialog: "${characterDialog}"
-                    Struktur prompt harus seperti skenario film, dengan deskripsi sinematik, breakdown adegan, dan audio.`;
+                const basePrompt = buildBasePrompt();
 
                 try {
                     const idPrompt = await callApi(`Anda adalah ahli prompt engineering. ${basePrompt} Buat dalam Bahasa Indonesia.`);
                     setGeneratedPromptId(idPrompt);
-
                     const enPrompt = await callApi(`You are an expert prompt engineer. ${basePrompt.replace('Buat dalam Bahasa Indonesia.', 'Create the prompt in English.')}`);
                     setGeneratedPromptEn(enPrompt);
-                    
                     saveToHistory(idPrompt, enPrompt);
                 } catch (error) {
                     alert(`Gagal membuat prompt. Error: ${error.message}`);
@@ -264,7 +244,7 @@
             
             const generateImagePreview = async () => {
                 if (!apiKey || !generatedPromptEn) {
-                    alert('Prompt harus dibuat terlebih dahulu dan API Key harus ada.');
+                    alert('Prompt harus dibuat terlebih dahulu.');
                     return;
                 }
                 setIsGeneratingImage(true);
@@ -283,8 +263,7 @@
                         throw new Error('No image data in API response.');
                     }
                 } catch (error) {
-                    alert(`Gagal membuat pratinjau gambar. Pastikan API Key Anda valid untuk Imagen. Error: ${error.message}`);
-                    console.error(error);
+                    alert(`Gagal membuat pratinjau gambar. Error: ${error.message}`);
                 } finally {
                     setIsGeneratingImage(false);
                 }
@@ -296,12 +275,13 @@
                     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* --- LEFT PANEL --- */}
                         <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col">
-                            <div className="flex justify-between items-center mb-6">
-                                <h1 className="text-3xl font-bold text-gray-800">Prompt Generator AI</h1>
+                            <div className="flex justify-between items-center mb-2">
+                                <h1 className="text-3xl font-bold text-gray-800">Prompt Generator Powered by Ai</h1>
                                 <button onClick={() => setView(view === 'form' ? 'history' : 'form')} className="text-sm font-medium text-blue-600 hover:text-blue-800">
                                     {view === 'form' ? 'Lihat Riwayat' : 'Kembali ke Form'}
                                 </button>
                             </div>
+                             <p className="text-gray-500 mb-6">Cara Mudah Jadi Kreatif dan Pintar Membuat Prompt Menggunakan Ai</p>
                             
                             {view === 'form' ? (
                                 <>
@@ -315,37 +295,101 @@
                                             <button onClick={() => setIsHelpModalOpen(true)} className="text-gray-500 shrink-0"><HelpIcon /></button>
                                         </div>
                                     </div>
-
-                                    {/* --- Section 2: Quick Start --- */}
+                                    
+                                    {/* --- Section 2: Main Category --- */}
                                     <div className="p-4 border rounded-lg">
-                                        <h3 className="text-lg font-semibold text-gray-700 mb-3">Mulai Cepat</h3>
-                                        <div className="grid sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label htmlFor="image-analysis" className={`w-full block text-center cursor-pointer py-2 px-4 rounded-md transition-colors ${isAnalyzing ? 'bg-gray-400' : 'bg-gray-200 hover:bg-gray-300'}`}>
-                                                    {isAnalyzing ? 'Menganalisis...' : 'Analisis Gambar'}
-                                                </label>
-                                                <input id="image-analysis" type="file" className="hidden" accept="image/*" onChange={handleImageAnalysis} disabled={isAnalyzing} />
-                                            </div>
-                                            <select onChange={handleTemplateSelect} className="w-full px-3 py-2 border rounded-md">
-                                                <option>Pilih Template Prompt...</option>
-                                                {Object.keys(promptTemplates).map(key => <option key={key} value={key}>{key}</option>)}
-                                            </select>
-                                        </div>
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-3">1. Pilih Kategori Prompt</h3>
+                                        <select value={mainCategory} onChange={(e) => setMainCategory(e.target.value)} className="w-full p-2 border rounded-md">
+                                            <option value="promosi">Promosi Produk</option>
+                                            <option value="packaging">Desain Packaging</option>
+                                            <option value="ucapan">Kartu Ucapan</option>
+                                            <option value="sosmed">Konten Sosial Media</option>
+                                            <option value="makanan">Fotografi Makanan</option>
+                                            <option value="properti">Properti & Arsitektur</option>
+                                            <option value="karakter">Desain Karakter</option>
+                                        </select>
                                     </div>
-
-                                    {/* --- Section 3: Promotion Details --- */}
+                                    
+                                    {/* --- Section 3: Input Details (Conditional) --- */}
                                     <div className="p-4 border rounded-lg">
-                                        <h3 className="text-lg font-semibold text-gray-700 mb-3">Detail Promosi</h3>
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-3">2. Isi Detail</h3>
+                                        { mainCategory === 'promosi' && (
+                                            <div className="space-y-4">
+                                                <input name="productName" value={inputs.productName} onChange={handleInputChange} placeholder="Nama Produk" className="w-full p-2 border rounded-md" />
+                                                <input name="targetAudience" value={inputs.targetAudience} onChange={handleInputChange} placeholder="Target Audiens" className="w-full p-2 border rounded-md" />
+                                                <input name="keyMessage" value={inputs.keyMessage} onChange={handleInputChange} placeholder="Pesan/Keunggulan Utama" className="w-full p-2 border rounded-md" />
+                                                <input name="ctaText" value={inputs.ctaText} onChange={handleInputChange} placeholder="Teks Call to Action (CTA)" className="w-full p-2 border rounded-md" />
+                                            </div>
+                                        )}
+                                        { mainCategory === 'packaging' && (
+                                            <div className="space-y-4">
+                                                <input name="packagingProduct" value={inputs.packagingProduct} onChange={handleInputChange} placeholder="Nama Produk" className="w-full p-2 border rounded-md" />
+                                                <select name="packagingType" value={inputs.packagingType} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                                                    <option>Kotak</option><option>Pouch (Kantong)</option><option>Botol</option><option>Kaleng</option><option>Tube</option>
+                                                </select>
+                                                <input name="materialTexture" value={inputs.materialTexture} onChange={handleInputChange} placeholder="Material & Tekstur (cth: Karton Doff)" className="w-full p-2 border rounded-md" />
+                                                <textarea name="requiredInfo" value={inputs.requiredInfo} onChange={handleInputChange} placeholder="Informasi Wajib (Logo, Netto, dll)" className="w-full p-2 border rounded-md" rows="2"></textarea>
+                                                <textarea name="graphicElements" value={inputs.graphicElements} onChange={handleInputChange} placeholder="Unsur Grafis (Ilustrasi, Pola, dll)" className="w-full p-2 border rounded-md" rows="2"></textarea>
+                                            </div>
+                                        )}
+                                        { mainCategory === 'ucapan' && (
+                                            <div className="space-y-4">
+                                                <select name="greetingType" value={inputs.greetingType} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                                                    <option>Ulang Tahun</option><option>Idul Fitri</option><option>Tahun Baru</option><option>Hari Kemerdekaan</option><option value="Lainnya...">Lainnya...</option>
+                                                </select>
+                                                {inputs.greetingType === 'Lainnya...' && <input name="customGreetingType" value={inputs.customGreetingType} onChange={handleInputChange} placeholder="Ketik Jenis Ucapan Anda" className="w-full p-2 border rounded-md" />}
+                                                <input name="recipientName" value={inputs.recipientName} onChange={handleInputChange} placeholder="Nama Penerima" className="w-full p-2 border rounded-md" />
+                                                <textarea name="greetingMessage" value={inputs.greetingMessage} onChange={handleInputChange} placeholder="Pesan Ucapan" className="w-full p-2 border rounded-md" rows="3"></textarea>
+                                            </div>
+                                        )}
+                                        { mainCategory === 'sosmed' && (
+                                            <div className="space-y-4">
+                                                <input name="socialTopic" value={inputs.socialTopic} onChange={handleInputChange} placeholder="Topik Konten" className="w-full p-2 border rounded-md" />
+                                                <select name="socialPlatform" value={inputs.socialPlatform} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                                                    <option>Instagram Post</option><option>Instagram Story</option><option>TikTok</option><option>YouTube Short</option><option>Twitter (X)</option>
+                                                </select>
+                                                <select name="socialGoal" value={inputs.socialGoal} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                                                    <option>Edukasi</option><option>Hiburan</option><option>Inspirasi</option><option>Interaksi (Engagement)</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                        { mainCategory === 'makanan' && (
+                                            <div className="space-y-4">
+                                                <input name="foodName" value={inputs.foodName} onChange={handleInputChange} placeholder="Nama Makanan" className="w-full p-2 border rounded-md" />
+                                                <input name="platingStyle" value={inputs.platingStyle} onChange={handleInputChange} placeholder="Gaya Plating" className="w-full p-2 border rounded-md" />
+                                                <input name="foodElements" value={inputs.foodElements} onChange={handleInputChange} placeholder="Elemen Tambahan" className="w-full p-2 border rounded-md" />
+                                                <input name="foodLighting" value={inputs.foodLighting} onChange={handleInputChange} placeholder="Pencahayaan" className="w-full p-2 border rounded-md" />
+                                                <input name="foodBackground" value={inputs.foodBackground} onChange={handleInputChange} placeholder="Latar Belakang" className="w-full p-2 border rounded-md" />
+                                            </div>
+                                        )}
+                                        { mainCategory === 'properti' && (
+                                            <div className="space-y-4">
+                                                <input name="buildingType" value={inputs.buildingType} onChange={handleInputChange} placeholder="Tipe Bangunan" className="w-full p-2 border rounded-md" />
+                                                <input name="architectureStyle" value={inputs.architectureStyle} onChange={handleInputChange} placeholder="Gaya Arsitektur" className="w-full p-2 border rounded-md" />
+                                                <input name="timeAndWeather" value={inputs.timeAndWeather} onChange={handleInputChange} placeholder="Waktu & Cuaca" className="w-full p-2 border rounded-md" />
+                                                <input name="cameraAngle" value={inputs.cameraAngle} onChange={handleInputChange} placeholder="Sudut Kamera" className="w-full p-2 border rounded-md" />
+                                                <input name="mainFeature" value={inputs.mainFeature} onChange={handleInputChange} placeholder="Fitur Utama" className="w-full p-2 border rounded-md" />
+                                            </div>
+                                        )}
+                                        { mainCategory === 'karakter' && (
+                                            <div className="space-y-4">
+                                                <input name="characterSubject" value={inputs.characterSubject} onChange={handleInputChange} placeholder="Subjek Karakter" className="w-full p-2 border rounded-md" />
+                                                <input name="artStyle" value={inputs.artStyle} onChange={handleInputChange} placeholder="Gaya Seni" className="w-full p-2 border rounded-md" />
+                                                <input name="poseAndExpression" value={inputs.poseAndExpression} onChange={handleInputChange} placeholder="Pose & Ekspresi" className="w-full p-2 border rounded-md" />
+                                                <input name="clothingAndAccessories" value={inputs.clothingAndAccessories} onChange={handleInputChange} placeholder="Pakaian & Aksesori" className="w-full p-2 border rounded-md" />
+                                                <input name="characterBackground" value={inputs.characterBackground} onChange={handleInputChange} placeholder="Latar Belakang" className="w-full p-2 border rounded-md" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    {/* --- Section 4: General Settings --- */}
+                                    <div className="p-4 border rounded-lg">
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-3">3. Pengaturan Umum</h3>
                                         <div className="space-y-4">
                                             <div className="flex rounded-lg bg-gray-200 p-1">
-                                                <button onClick={() => setOutputType('flyer')} className={`w-full py-2 rounded-md text-sm font-semibold ${outputType === 'flyer' ? 'bg-white text-blue-600 shadow' : 'bg-transparent text-gray-600'}`}>Flyer</button>
+                                                <button onClick={() => setOutputType('image')} className={`w-full py-2 rounded-md text-sm font-semibold ${outputType === 'image' ? 'bg-white text-blue-600 shadow' : 'bg-transparent text-gray-600'}`}>Gambar/Foto</button>
                                                 <button onClick={() => setOutputType('video')} className={`w-full py-2 rounded-md text-sm font-semibold ${outputType === 'video' ? 'bg-white text-blue-600 shadow' : 'bg-transparent text-gray-600'}`}>Video</button>
                                             </div>
-                                            <input name="productName" value={inputs.productName} onChange={handleInputChange} placeholder="Nama Produk" className="w-full p-2 border rounded-md" />
-                                            <input name="targetAudience" value={inputs.targetAudience} onChange={handleInputChange} placeholder="Target Audiens" className="w-full p-2 border rounded-md" />
-                                            <input name="keyMessage" value={inputs.keyMessage} onChange={handleInputChange} placeholder="Pesan/Keunggulan Utama" className="w-full p-2 border rounded-md" />
-                                            <input name="ctaText" value={inputs.ctaText} onChange={handleInputChange} placeholder="Teks Call to Action (CTA)" className="w-full p-2 border rounded-md" />
-                                            
                                             <select name="toneOfVoice" value={inputs.toneOfVoice} onChange={handleInputChange} className="w-full p-2 border rounded-md">
                                                 <option>Profesional</option><option>Humoris</option><option>Inspiratif</option><option>Mendesak (Urgent)</option><option>Ramah</option><option>Mewah</option><option value="Lainnya...">Lainnya...</option>
                                             </select>
@@ -358,10 +402,10 @@
                                         </div>
                                     </div>
 
-                                    {/* --- Section 4: Specific Settings --- */}
-                                    {outputType === 'flyer' ? (
+                                    {/* --- Section 5: Specific Settings --- */}
+                                    {outputType === 'image' ? (
                                         <div className="p-4 border rounded-lg">
-                                            <h3 className="text-lg font-semibold text-gray-700 mb-3">Pengaturan Flyer</h3>
+                                            <h3 className="text-lg font-semibold text-gray-700 mb-3">4. Pengaturan Gambar</h3>
                                             <div className="grid grid-cols-2 gap-2">
                                                 <button onClick={() => setInputs(p => ({...p, aspectRatio: '4:5'}))} className={`flex items-center justify-center p-2 rounded-md ${inputs.aspectRatio === '4:5' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}><AspectRatioIcon type="portrait" /> 4:5</button>
                                                 <button onClick={() => setInputs(p => ({...p, aspectRatio: '9:16'}))} className={`flex items-center justify-center p-2 rounded-md ${inputs.aspectRatio === '9:16' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}><AspectRatioIcon type="portrait" /> 9:16</button>
@@ -372,7 +416,7 @@
                                         </div>
                                     ) : (
                                         <div className="p-4 border rounded-lg">
-                                            <h3 className="text-lg font-semibold text-gray-700 mb-3">Pengaturan Video</h3>
+                                            <h3 className="text-lg font-semibold text-gray-700 mb-3">4. Pengaturan Video</h3>
                                             <div className="space-y-4">
                                                 <input name="characterName" value={inputs.characterName} onChange={handleInputChange} placeholder="Nama Karakter" className="w-full p-2 border rounded-md" />
                                                 <input name="characterDesc" value={inputs.characterDesc} onChange={handleInputChange} placeholder="Deskripsi Karakter" className="w-full p-2 border rounded-md" />
@@ -396,7 +440,7 @@
                                                 </svg>
                                             </button>
                                             <div className="flex-grow">
-                                                <p className="font-semibold">{item.inputs.productName || "Tanpa Judul"}</p>
+                                                <p className="font-semibold">{item.inputs.productName || item.inputs.packagingProduct || item.inputs.greetingType || item.inputs.socialTopic || item.inputs.foodName || item.inputs.buildingType || item.inputs.characterSubject || "Tanpa Judul"}</p>
                                                 <p className="text-xs text-gray-500">{new Date(item.id).toLocaleString()}</p>
                                                 <button onClick={() => loadFromHistory(item)} className="text-sm text-blue-600 mt-2">Muat Ulang</button>
                                             </div>
@@ -425,14 +469,17 @@
                                     </div>
                                 )}
                             </div>
-                            <div className="mt-4 flex gap-4">
+                            <div className="mt-4 flex flex-col sm:flex-row gap-2">
                                 {generatedPromptId && !isLoading && (
                                     <>
                                     <button onClick={() => copyToClipboard(activeTab === 'id' ? generatedPromptId : generatedPromptEn)} className="flex-1 py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">
-                                        {copySuccess || `Salin Teks Prompt`}
+                                        {copySuccess || `Salin Teks`}
+                                    </button>
+                                    <button onClick={() => saveToFile(activeTab === 'id' ? generatedPromptId : generatedPromptEn)} className="flex-1 py-2 bg-gray-500 text-white font-semibold rounded-md hover:bg-gray-600">
+                                        Simpan ke File
                                     </button>
                                     <button onClick={generateImagePreview} disabled={isGeneratingImage || outputType === 'video'} className="flex-1 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed flex items-center justify-center">
-                                        {isGeneratingImage ? <div className="loader"></div> : 'Buat Pratinjau Gambar'}
+                                        {isGeneratingImage ? <div className="loader"></div> : 'Pratinjau Gambar'}
                                     </button>
                                     </>
                                 )}

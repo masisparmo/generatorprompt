@@ -59,7 +59,6 @@
 
             // Loading & Results
             const [isLoading, setIsLoading] = useState(false);
-            const [isAnalyzing, setIsAnalyzing] = useState(false);
             const [isGeneratingImage, setIsGeneratingImage] = useState(false);
             const [generatedPromptId, setGeneratedPromptId] = useState('');
             const [generatedPromptEn, setGeneratedPromptEn] = useState('');
@@ -68,6 +67,8 @@
 
             // Modals
             const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+            const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+            const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
             // Form Inputs
             const [inputs, setInputs] = useState({
@@ -157,6 +158,13 @@
                 const updatedHistory = history.map(item => item.id === id ? { ...item, isFavorite: !item.isFavorite } : item);
                 setHistory(updatedHistory);
                 localStorage.setItem('promptHistory', JSON.stringify(updatedHistory));
+            };
+
+            const handleClearHistory = () => {
+                if (window.confirm('Apakah Anda yakin ingin menghapus semua riwayat? Tindakan ini tidak dapat dibatalkan.')) {
+                    setHistory([]);
+                    localStorage.removeItem('promptHistory');
+                }
             };
 
             // --- AI API Calls ---
@@ -293,9 +301,13 @@
                         <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col">
                             <div className="flex justify-between items-center mb-2">
                                 <h1 className="text-3xl font-bold text-gray-800">Prompt Generator Powered by Ai</h1>
-                                <button onClick={() => setView(view === 'form' ? 'history' : 'form')} className="text-sm font-medium text-blue-600 hover:text-blue-800">
-                                    {view === 'form' ? 'Lihat Riwayat' : 'Kembali ke Form'}
-                                </button>
+                                <div className="flex items-center space-x-4">
+                                    <button onClick={() => setIsGuideModalOpen(true)} className="text-sm font-medium text-blue-600 hover:text-blue-800">Bantuan</button>
+                                    <button onClick={() => setIsContactModalOpen(true)} className="text-sm font-medium text-gray-600 hover:text-gray-800">Laporkan Error</button>
+                                    <button onClick={() => setView(view === 'form' ? 'history' : 'form')} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                                        {view === 'form' ? 'Riwayat' : 'Kembali'}
+                                    </button>
+                                </div>
                             </div>
                              <p className="text-gray-500 mb-6">Cara Mudah Jadi Kreatif dan Pintar Membuat Prompt Menggunakan Ai</p>
                             
@@ -462,6 +474,9 @@
                                             </div>
                                         </div>
                                     )) : <p>Belum ada riwayat.</p>}
+                                    {history.length > 0 && (
+                                        <button onClick={handleClearHistory} className="w-full mt-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-md hover:bg-red-600">Hapus Semua Riwayat</button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -510,14 +525,79 @@
                                 <div className="space-y-4">
                                     <h4 className="font-semibold text-gray-800">Untuk Google Gemini & Imagen:</h4>
                                     <ol className="list-decimal list-inside space-y-1 text-gray-700 mt-1">
-                                        <li>Buka situs **Google AI Studio**.</li>
+                                        <li>Buka situs <strong>Google AI Studio</strong>.</li>
                                         <li>Login dengan akun Google Anda.</li>
-                                        <li>Klik tombol **"Get API key"** di menu sebelah kiri.</li>
-                                        <li>Klik **"Create API key in new project"**.</li>
-                                        <li>Salin (Copy) API Key yang muncul. Pastikan proyek Google Cloud Anda memiliki **informasi penagihan (billing)** yang aktif untuk menggunakan Imagen API.</li>
+                                        <li>Klik tombol <strong>"Get API key"</strong> di menu sebelah kiri.</li>
+                                        <li>Klik <strong>"Create API key in new project"</strong>.</li>
+                                        <li>Salin (Copy) API Key yang muncul. Pastikan proyek Google Cloud Anda memiliki <strong>informasi penagihan (billing)</strong> yang aktif untuk menggunakan Imagen API.</li>
                                     </ol>
                                 </div>
                                 <button onClick={() => setIsHelpModalOpen(false)} className="mt-6 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors">Mengerti</button>
+                            </div>
+                        </div>
+                    )}
+                     {/* --- GUIDE MODAL --- */}
+                    {isGuideModalOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] flex flex-col">
+                                <h3 className="text-2xl font-bold mb-4 text-gray-800">Panduan Penggunaan Aplikasi</h3>
+                                <div className="overflow-y-auto custom-scrollbar pr-4 space-y-4 text-gray-700">
+                                    <div>
+                                        <h4 className="font-semibold text-lg">Langkah 1: Pengaturan Awal</h4>
+                                        <p>Sebelum memulai, Anda memerlukan <strong>API Key</strong> dari Google AI Studio. Klik ikon tanda tanya (?) di samping kolom API Key untuk melihat cara mendapatkannya. Tempelkan kunci tersebut di kolom yang tersedia.</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-lg">Langkah 2: Pilih Kategori</h4>
+                                        <p>Gunakan menu dropdown <strong>"Pilih Kategori Prompt"</strong> untuk menentukan jenis konten yang ingin Anda buat. Setiap kategori akan menampilkan formulir yang berbeda sesuai kebutuhan.</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-lg">Langkah 3: Isi Detail</h4>
+                                        <p>Lengkapi semua kolom yang tersedia. Semakin detail informasi yang Anda berikan, semakin baik dan akurat prompt yang akan dihasilkan oleh AI.</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-lg">Langkah 4: Pengaturan Umum & Spesifik</h4>
+                                        <p>Pilih output yang Anda inginkan (Gambar/Foto atau Video). Sesuaikan juga <strong>Nada Suara</strong>, <strong>Gaya Visual</strong>, dan <strong>Aspek Rasio</strong> (untuk gambar) atau detail <strong>Karakter</strong> (untuk video).</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-lg">Langkah 5: Buat Prompt!</h4>
+                                        <p>Setelah semua detail terisi, klik tombol <strong>"Buat Detail Prompt dengan AI"</strong>. Tunggu beberapa saat hingga AI selesai memproses dan menampilkan hasilnya di panel kanan.</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-lg">Langkah 6: Gunakan Hasilnya</h4>
+                                        <p>Di panel kanan, Anda dapat:</p>
+                                        <ul className="list-disc list-inside ml-4">
+                                            <li>Beralih antara prompt versi Bahasa Indonesia dan Inggris.</li>
+                                            <li>Mengklik <strong>"Salin Teks"</strong> untuk menyalin prompt ke clipboard.</li>
+                                            <li>Mengklik <strong>"Simpan ke File"</strong> untuk mengunduh prompt sebagai file .txt.</li>
+                                            <li>Mengklik <strong>"Pratinjau Gambar"</strong> untuk membuat contoh visual dari prompt Anda (hanya untuk output gambar dan memerlukan API Key yang valid).</li>
+                                        </ul>
+                                    </div>
+                                     <div>
+                                        <h4 className="font-semibold text-lg">Fitur Tambahan</h4>
+                                        <ul className="list-disc list-inside ml-4">
+                                            <li><strong>Riwayat:</strong> Akses semua prompt yang pernah Anda buat dengan mengklik tombol "Riwayat". Anda bisa memfavoritkan atau memuat ulang prompt dari sini.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsGuideModalOpen(false)} className="mt-6 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors shrink-0">Mengerti</button>
+                            </div>
+                        </div>
+                    )}
+                    {/* --- CONTACT MODAL --- */}
+                    {isContactModalOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+                                <h3 className="text-xl font-bold mb-4">Laporkan Error</h3>
+                                <p className="text-gray-700 mb-6">Jika Anda menemukan error atau bug pada aplikasi, silakan hubungi developer melalui salah satu metode di bawah ini. Terima kasih atas masukan Anda!</p>
+                                <div className="space-y-4">
+                                    <a href="https://wa.me/628121083060?text=Halo,%20saya%20menemukan%20error%20di%20aplikasi%20Prompt%20Generator." target="_blank" rel="noopener noreferrer" className="block w-full text-center py-3 px-4 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition-colors">
+                                        Hubungi via WhatsApp
+                                    </a>
+                                    <a href="mailto:mail@isparmo.com?subject=Laporan%20Error%20Aplikasi%20Prompt%20Generator" className="block w-full text-center py-3 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors">
+                                        Kirim Email
+                                    </a>
+                                </div>
+                                <button onClick={() => setIsContactModalOpen(false)} className="mt-6 w-full bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition-colors">Tutup</button>
                             </div>
                         </div>
                     )}

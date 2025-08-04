@@ -37,7 +37,7 @@ Aplikasi ini dibangun sepenuhnya sebagai _front-end application_ (berjalan di si
     
 *   **Integrasi AI:**
     
-*   **Google Gemini 1.5 Flash:** Untuk memproses input pengguna dan menghasilkan prompt teks yang detail.
+*   **Google Gemini 2.5 Flash:** Untuk memproses input pengguna dan menghasilkan prompt teks yang detail.
     
 *   **Google Gemini 2.0 Flash Image Generation:** Untuk fitur "Pratinjau Visual" yang membuat contoh gambar dari prompt yang dihasilkan.
     

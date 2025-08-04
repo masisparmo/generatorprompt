@@ -256,14 +256,27 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+                    
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(`API Error (${response.status}): ${errorBody.error?.message || 'Unknown error'}`);
+                    }
+
                     const result = await response.json();
-                    if (result.predictions && result.predictions[0].bytesBase64Encoded) {
+                    console.log("Image API Response:", result); // For debugging
+
+                    if (result.predictions && result.predictions[0] && result.predictions[0].bytesBase64Encoded) {
                         setPreviewImageUrl(`data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`);
                     } else {
-                        throw new Error('No image data in API response.');
+                        // Check for safety filter rejection
+                        if (result.predictions && result.predictions[0] && result.predictions[0].safetyRatings) {
+                             throw new Error('Gambar tidak dapat dibuat karena terdeteksi oleh filter keamanan. Coba ubah prompt Anda.');
+                        }
+                        throw new Error('No image data in API response. Pastikan API Key Anda memiliki akses ke Vertex AI API (Imagen).');
                     }
                 } catch (error) {
-                    alert(`Gagal membuat pratinjau gambar. Error: ${error.message}`);
+                    alert(`Gagal membuat pratinjau gambar. \n\nDetail: ${error.message}`);
+                    console.error(error);
                 } finally {
                     setIsGeneratingImage(false);
                 }
